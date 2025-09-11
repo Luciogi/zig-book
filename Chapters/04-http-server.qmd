@@ -296,7 +296,9 @@ const stdout = &stdout_writer.interface;
 
 pub fn main() !void {
     const socket = try SocketConf.Socket.init();
-    try stdout.print("Server Addr: {any}\n", .{socket._address});
+    try stdout.print("Server address: ", .{});
+    try socket_address.in.format(stdout)
+    try stdout.print("\n", .{});
     try stdout.flush();
     var server = try socket._address.listen(.{});
     const connection = try server.accept();
@@ -363,8 +365,14 @@ const std = @import("std");
 const Connection = std.net.Server.Connection;
 pub fn read_request(conn: Connection,
                     buffer: []u8) !void {
-    const reader = conn.stream.reader();
-    _ = try reader.read(buffer);
+    var reader = conn.stream.reader(buffer);
+    const reader_interface = reader.interface();
+
+    // looping, saves data from stream to buffer
+    while (reader_interface.takeDelimiterExclusive('\n')) |line| {
+        // End of HTTP request message
+	if(std.mem.eql(u8, @as([]const u8, line), "\r")) break; // TODO: this Line is confusing why @as
+    } else |_| {}
 }
 ```
 
@@ -414,7 +422,10 @@ const stdout = &stdout_writer.interface;
 
 pub fn main() !void {
     const socket = try SocketConf.Socket.init();
-    try stdout.print("Server Addr: {any}\n", .{socket._address});
+    try stdout.print("Server address: ", .{});
+    try socket_address.in.format(stdout)
+    try stdout.print("\n", .{});
+    try stdout.flush();
     var server = try socket._address.listen(.{});
     const connection = try server.accept();
     var buffer: [1000]u8 = undefined;
@@ -424,6 +435,7 @@ pub fn main() !void {
     _ = try Request.read_request(
         connection, buffer[0..buffer.len]
     );
+
     try stdout.print("{s}\n", .{buffer});
     try stdout.flush();
 }
@@ -745,11 +757,7 @@ pub const Method = enum {
         return MethodMap.get(text).?;
     }
     pub fn is_supported(m: []const u8) bool {
-        const method = MethodMap.get(m);
-        if (method) |_| {
-            return true;
-        }
-        return false;
+        return MethodMap.has(m);
     }
 };
 ```
@@ -916,7 +924,6 @@ request.Request{
 ```
 
 
-
 ### Sending the HTTP Response to the client
 
 In this last part, we are going to write the logic responsible for
@@ -943,22 +950,30 @@ const std = @import("std");
 const Connection = std.net.Server.Connection;
 pub fn send_200(conn: Connection) !void {
     const message = (
-        "HTTP/1.1 200 OK\nContent-Length: 48"
+        "HTTP/1.1 200 OK\nContent-Length: 49"
         ++ "\nContent-Type: text/html\n"
         ++ "Connection: Closed\n\n<html><body>"
-        ++ "<h1>Hello, World!</h1></body></html>"
+        ++ "<h1>Hello, World!</h1></body></html>\n"
     );
-    _ = try conn.stream.write(message);
+
+    // buffer is not needed here, data is directly written to stream
+    var writer = conn.stream.writer(&.{});
+    const writer_interface = &writer.interface;
+    _ = try writer_interface.write(message);
 }
 
 pub fn send_404(conn: Connection) !void {
     const message = (
-        "HTTP/1.1 404 Not Found\nContent-Length: 50"
+        "HTTP/1.1 404 Not Found\nContent-Length: 51"
         ++ "\nContent-Type: text/html\n"
         ++ "Connection: Closed\n\n<html><body>"
-        ++ "<h1>File not found!</h1></body></html>"
+        ++ "<h1>File not found!</h1></body></html>\n"
     );
-    _ = try conn.stream.write(message);
+
+    // buffer is not needed here, data is directly written to stream
+    var writer = conn.stream.writer(&.{});
+    const writer_interface = &writer.interface;
+    _ = try writer_interface.write(message);
 }
 ```
 
@@ -1013,7 +1028,9 @@ const stdout = &stdout_writer.interface;
 
 pub fn main() !void {
     const socket = try SocketConf.Socket.init();
-    try stdout.print("Server Addr: {any}\n", .{socket._address});
+    try stdout.print("Server address: ", .{});
+    try socket_address.in.format(stdout)
+    try stdout.print("\n", .{});
     try stdout.flush();
     var server = try socket._address.listen(.{});
     const connection = try server.accept();
