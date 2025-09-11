@@ -226,7 +226,7 @@ when we create the socket object, we are using the `IPROTO.TCP` property as an i
 tell the function to create a socket for TCP connections.
 
 
-```{zig}
+```{zig filename="config.zig"}
 #| auto_main: false
 #| build_type: "lib"
 const std = @import("std");
@@ -286,7 +286,7 @@ For now, we are not doing anything with this connection object.
 But we are going to use it in the next section.
 
 
-```{zig}
+```{zig filename="main.zig"}
 #| eval: false
 const std = @import("std");
 const SocketConf = @import("config.zig");
@@ -359,7 +359,7 @@ use our connection object to read the message sent by the client,
 which is the HTTP Request.
 
 
-```{zig}
+```{zig filename="request.zig"}
 #| eval: false
 const std = @import("std");
 const Connection = std.net.Server.Connection;
@@ -411,7 +411,7 @@ this object. Because uninitialized memory may cause undefined behaviour in our p
 Since the `read_request()` function should receive as input the buffer object as a slice object (`[]u8`),
 I am using the syntax `array[0..array.len]` to get access to a slice of this `buffer` object.
 
-```{zig}
+```{zig filename="main.zig"}
 #| eval: false
 const std = @import("std");
 const SocketConf = @import("config.zig");
@@ -679,7 +679,7 @@ enumeration. Because, for the purpose of this chapter, I want to
 implement only the GET HTTP method. That is why I am not
 including the other HTTP methods in this enumeration.
 
-```{zig}
+```{zig filename="request.zig"}
 #| build_type: "lib"
 pub const Method = enum {
     GET
@@ -716,7 +716,7 @@ in each key-value pair should always be a string value. While the second element
 be a value from the enum structure that you have used inside the `Map()` function.
 
 
-```{zig}
+```{zig filename="request.zig"}
 #| eval: false
 const Map = std.static_string_map.StaticStringMap;
 const MethodMap = Map(Method).initComptime(.{
@@ -749,7 +749,7 @@ by the `get()` method from our `MethodMap` object. The if statement unwraps the 
 returned by this method, and returns `true` in case this optional value is a not-null value.
 Otherwise, it simply returns `false`.
 
-```{zig}
+```{zig filename="request.zig"}
 #| eval: false
 pub const Method = enum {
     GET,
@@ -779,7 +779,7 @@ Take the `Request` struct below as an example. It contains the three
 essential information from the "top-level" header (i.e., the first line)
 in the HTTP Request.
 
-```{zig}
+```{zig filename="request.zig"}
 #| eval: false
 const Request = struct {
     method: Method,
@@ -839,7 +839,7 @@ the `peek()` method. Both `next()` and `peek()` methods return an optional value
 why I use the `?` method to unwrap these optional values.
 
 
-```{zig}
+```{zig filename="request.zig"}
 #| eval: false
 pub fn parse_request(text: []u8) Request {
     const line_index = std.mem.indexOfScalar(
@@ -886,7 +886,7 @@ In the result below, the sequence of decimal values 72, 84, 84, 80, 47, 49, 46, 
 are the bytes that form the text "HTTP/1.1". And the integer 47, is the decimal value of
 the character `/`, which represents our URI in this request.
 
-```{zig}
+```{zig filename="main.zig"}
 #| eval: false
 const std = @import("std");
 const SocketConf = @import("config.zig");
@@ -944,7 +944,7 @@ in this book after all, therefore, the source code that we write do not need to 
 It just needs to work!
 
 
-```{zig}
+```{zig filename="response.zig"}
 #| eval: false
 const std = @import("std");
 const Connection = std.net.Server.Connection;
@@ -1015,7 +1015,7 @@ described this function already in @sec-strings-useful-funs, so, comeback to
 that section if you are not familiar yet with this function.
 
 
-```{zig}
+```{zig filename="main.zig"}
 #| eval: false
 const std = @import("std");
 const SocketConf = @import("config.zig");
